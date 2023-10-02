@@ -633,7 +633,6 @@ set(WARNING_FLAGS
     -Wpointer-to-enum-cast
     -Wpointer-to-int-cast
     -Wpointer-type-mismatch
-    -Wpoison-system-directories
     -Wpotentially-direct-selector
     -Wpotentially-evaluated-expression
     -Wpragma-clang-attribute
