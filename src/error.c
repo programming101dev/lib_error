@@ -29,7 +29,7 @@ struct p101_error
     size_t          line_number;
     p101_error_type type;
 
-    void (*reporter)(const struct p101_error *err);
+    void            (*reporter)(const struct p101_error *err);
 
     union
     {

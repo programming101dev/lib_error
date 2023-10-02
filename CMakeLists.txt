@@ -25,11 +25,15 @@ set(HEADER_LIST
 # Build the shared library
 add_library(p101_error SHARED ${SOURCES})
 
+# Enable UBSan checks
+target_compile_options(p101_error PRIVATE -fsanitize=undefined)
+target_link_libraries(p101_error PRIVATE -fsanitize=undefined)
+
 # Include directories (if needed)
 target_include_directories(p101_error PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
 # Link libraries (if needed)
-# target_link_libraries(p101_error <library_name>)
+# target_link_libraries(p101_error ubsan)
 
 # Common compiler flags
 set(STANDARD_FLAGS
