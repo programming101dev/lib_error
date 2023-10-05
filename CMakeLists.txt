@@ -32,9 +32,6 @@ target_link_libraries(p101_error PRIVATE -fsanitize=undefined -fsanitize=address
 # Include directories (if needed)
 target_include_directories(p101_error PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
-# Link libraries (if needed)
-# target_link_libraries(p101_error ubsan)
-
 # Common compiler flags
 set(STANDARD_FLAGS
     -Werror
@@ -79,7 +76,6 @@ target_compile_options(p101_error PRIVATE
 # Get compiler flags for the target
 get_target_property(COMPILE_OPTIONS p101_error COMPILE_OPTIONS)
 string(REPLACE ";" " " COMPILE_OPTIONS_STR "${COMPILE_OPTIONS}")
-message(STATUS "COMPILE_OPTIONS: ${COMPILE_OPTIONS_STR}")
 
 find_program(CLANG_FORMAT NAMES "clang-format" REQUIRED)
 find_program(CLANG_TIDY NAMES "clang-tidy" REQUIRED)
@@ -98,8 +94,16 @@ add_custom_target(lint
         COMMENT "Running clang-tidy"
 )
 
+# Add a custom target for clang --analyze
+add_custom_target(analysis
+        COMMAND ${CMAKE_C_COMPILER} --analyze -Xclang -analyzer-checker=core --analyze -Xclang -analyzer-checker=deadcode -Xclang -analyzer-checker=security -Xclang -analyzer-checker=unix -Xclang -analyzer-checker=unix ${SOURCES} ${CMAKE_C_FLAGS} ${COMMON_FLAGS} -I${CMAKE_SOURCE_DIR}/include
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running clang --analyze"
+)
+
 add_dependencies(p101_error format)
 add_dependencies(p101_error lint)
+add_dependencies(p101_error analysis)
 
 # Check if the system uses 64-bit libraries
 get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
@@ -110,9 +114,6 @@ if ("${LIB64}" STREQUAL "TRUE")
 else()
     set(LIBSUFFIX "")
 endif()
-
-# Print the LIBSUFFIX variable for debugging
-message("LIBSUFFIX: ${LIBSUFFIX}")
 
 # Define the installation directory for libraries
 set(INSTALL_LIB_DIR lib${LIBSUFFIX} CACHE PATH "Installation directory for libraries")
