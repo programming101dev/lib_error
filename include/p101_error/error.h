@@ -51,7 +51,7 @@ extern "C"
      * @param err
      * @return
      */
-    bool p101_error_is_reporting(struct p101_error *err);
+    bool p101_error_is_reporting(const struct p101_error *err);
 
     /**
      *
