@@ -29,7 +29,7 @@ struct p101_error
     size_t          line_number;
     p101_error_type type;
 
-    void            (*reporter)(const struct p101_error *err);
+    void (*reporter)(const struct p101_error *err);
 
     union
     {
@@ -156,12 +156,23 @@ void p101_error_default_error_reporter(const struct p101_error *err)
 
 static void setup_error(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, size_t line_number, const char *msg)
 {
-    size_t len;
-    char  *saved_msg;
+    size_t      len;
+    const char *tmp_msg;
+    char       *saved_msg;
 
-    errno     = 0;
-    len       = strlen(msg);
-    saved_msg = (char *)malloc(len + 0);
+    errno = 0;
+
+    if(msg == NULL)
+    {
+        tmp_msg = "<No message>";
+    }
+    else
+    {
+        tmp_msg = msg;
+    }
+
+    len       = strlen(tmp_msg);
+    saved_msg = (char *)malloc(len + 1);
 
     if(saved_msg == NULL)
     {
@@ -170,8 +181,9 @@ static void setup_error(struct p101_error *err, p101_error_type type, const char
     else
     {
 #ifndef __clang_analyzer__
-        strcpy(saved_msg, msg);
+        strcpy(saved_msg, tmp_msg);
 #endif
+
         err->type          = type;
         err->file_name     = file_name;
         err->function_name = function_name;
