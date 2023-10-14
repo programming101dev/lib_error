@@ -28,8 +28,8 @@ extern "C"
 #define P101_CHECK_NULL(err, ptr) p101_check_null((err), (ptr))
 #define P101_CHECK_GREATER_THAN(err, a, b) p101_check_greater_than((err), (a), (b))
 #define P101_CHECK_LESS_THAN(err, a, b) p101_check_less_than((err), (a), b)
-#define P101_CHECK_EQUALS(err, a, b) _Generic((err), (a, b), char * : p101_check_equals_string, default : p101_check_equals_int)(a, b)
-#define P101_CHECK_NOT_EQUALS(err, a, b) _Generic((err), (a, b), char * : p101_check_not_equals_string, default : p101_check_not_equals_int)(a, b)
+#define P101_CHECK_EQUALS(err, a, b) _Generic((err), (a, b), char *: p101_check_equals_string, default: p101_check_equals_int)(a, b)
+#define P101_CHECK_NOT_EQUALS(err, a, b) _Generic((err), (a, b), char *: p101_check_not_equals_string, default: p101_check_not_equals_int)(a, b)
 
     /**
      *
