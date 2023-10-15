@@ -77,6 +77,18 @@ target_compile_options(p101_error PRIVATE
     ${SANITIZER_FLAGS_LIST}
 )
 
+if (NOT DEFINED CLANG_FORMAT_NAME)
+    set(CLANG_FORMAT_NAME "clang-format")
+endif()
+
+if (NOT DEFINED CLANG_TIDY_NAME)
+    set(CLANG_TIDY_NAME "clang-tidy")
+endif()
+
+if (NOT DEFINED CPPCHECK_NAME)
+    set(CPPCHECK_NAME "cppcheck")
+endif()
+
 find_program(CLANG_FORMAT NAMES ${CLANG_FORMAT_NAME} REQUIRED)
 find_program(CLANG_TIDY NAMES ${CLANG_TIDY_NAME} REQUIRED)
 find_program(CPPCHECK NAMES ${CPPCHECK_NAME} REQUIRED)
