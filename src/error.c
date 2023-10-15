@@ -28,7 +28,6 @@ struct p101_error
     const char     *function_name;
     size_t          line_number;
     p101_error_type type;
-
     void            (*reporter)(const struct p101_error *err);
 
     union
@@ -38,9 +37,9 @@ struct p101_error
     };
 };
 
-static void        error_init(struct p101_error *err, void (*reporter)(const struct p101_error *err));
-static void        setup_error(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, size_t line_number, const char *msg);
-static void        setup_error_no_dup(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, size_t line_number, const char *msg);
+static void error_init(struct p101_error *err, void (*reporter)(const struct p101_error *err));
+static void setup_error(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, size_t line_number, const char *msg);
+static void setup_error_no_dup(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, size_t line_number, const char *msg);
 
 struct p101_error *p101_error_create(bool report)
 {
