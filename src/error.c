@@ -28,7 +28,7 @@ struct p101_error
     const char     *function_name;
     size_t          line_number;
     p101_error_type type;
-    void            (*reporter)(const struct p101_error *err);
+    void (*reporter)(const struct p101_error *err);
 
     union
     {
@@ -219,7 +219,7 @@ void p101_error_check(struct p101_error *err, const char *file_name, const char 
 
 void p101_error_errno(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number, errno_t err_code)
 {
-    char *msg;
+    const char *msg;
 
     errno = 0;
     msg   = strerror(err_code);    // NOLINT(concurrency-mt-unsafe)
