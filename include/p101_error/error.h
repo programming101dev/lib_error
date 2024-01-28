@@ -46,98 +46,19 @@ extern "C"
 
     struct p101_error *p101_error_create(bool report);
 
-    /**
-     *
-     * @param err
-     * @return
-     */
-    bool p101_error_is_reporting(const struct p101_error *err);
-
-    /**
-     *
-     * @param err
-     * @param on
-     */
-    void p101_error_set_reporting(struct p101_error *err, bool on);
-
+    bool        p101_error_is_reporting(const struct p101_error *err);
+    void        p101_error_set_reporting(struct p101_error *err, bool on);
     const char *p101_error_get_message(const struct p101_error *err);
-
-    /**
-     *
-     * @param err
-     */
-    void p101_error_reset(struct p101_error *err);
-
-    /**
-     *
-     * @param err
-     */
-    void p101_error_default_error_reporter(const struct p101_error *err);
-
-    /**
-     *
-     * @param err
-     * @param file_name
-     * @param function_name
-     * @param line_number
-     */
-    void p101_error_check(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number);
-
-    /**
-     *
-     * @param err
-     * @param file_name
-     * @param function_name
-     * @param line_number
-     * @param err_code
-     */
-    void p101_error_errno(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number, errno_t err_code);
-
-    /**
-     *
-     * @param err
-     * @param file_name
-     * @param function_name
-     * @param line_number
-     * @param msg
-     * @param err_code
-     */
-    void p101_error_system(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number, const char *msg, int err_code);
-
-    /**
-     *
-     * @param err
-     * @param file_name
-     * @param function_name
-     * @param line_number
-     * @param msg
-     * @param err_code
-     */
-    void p101_error_user(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number, const char *msg, int err_code);
-
-    /**
-     *
-     * @param err
-     * @return
-     */
-    bool p101_error_has_error(const struct p101_error *err);
-
-    /**
-     *
-     * @param err
-     * @return
-     */
-    bool p101_error_has_no_error(const struct p101_error *err);
-
-    /**
-     *
-     * @param err
-     * @param code
-     * @return
-     */
-    bool p101_error_is_errno(const struct p101_error *err, errno_t code);
-
-    errno_t p101_errno_get_errno(const struct p101_error *err);
+    void        p101_error_reset(struct p101_error *err);
+    void        p101_error_default_error_reporter(const struct p101_error *err);
+    void        p101_error_check(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number);
+    void        p101_error_errno(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number, errno_t err_code);
+    void        p101_error_system(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number, const char *msg, int err_code);
+    void        p101_error_user(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number, const char *msg, int err_code);
+    bool        p101_error_has_error(const struct p101_error *err);
+    bool        p101_error_has_no_error(const struct p101_error *err);
+    bool        p101_error_is_errno(const struct p101_error *err, errno_t code);
+    errno_t     p101_errno_get_errno(const struct p101_error *err);
 
 #define P101_ERROR_RAISE_CHECK(err) p101_error_check((err), __FILE__, __func__, __LINE__)
 #define P101_ERROR_RAISE_ERRNO(err, code) p101_error_errno((err), __FILE__, __func__, __LINE__, (code))

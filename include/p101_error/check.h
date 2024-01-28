@@ -31,74 +31,13 @@ extern "C"
 #define P101_CHECK_EQUALS(err, a, b) _Generic((err), (a, b), char *: p101_check_equals_string, default: p101_check_equals_int)(a, b)
 #define P101_CHECK_NOT_EQUALS(err, a, b) _Generic((err), (a, b), char *: p101_check_not_equals_string, default: p101_check_not_equals_int)(a, b)
 
-    /**
-     *
-     * @param err
-     * @param ptr
-     * @return
-     */
     bool p101_check_not_null(struct p101_error *err, const void *ptr);
-
-    /**
-     *
-     * @param err
-     * @param ptr
-     * @return
-     */
     bool p101_check_null(struct p101_error *err, const void *ptr);
-
-    /**
-     *
-     * @param err
-     * @param a
-     * @param b
-     * @return
-     */
     bool p101_check_greater_than_int(struct p101_error *err, int a, int b);
-
-    /**
-     *
-     * @param err
-     * @param a
-     * @param b
-     * @return
-     */
     bool p101_check_less_than_int(struct p101_error *err, int a, int b);
-
-    /**
-     *
-     * @param err
-     * @param a
-     * @param b
-     * @return
-     */
     bool p101_check_equals_int(struct p101_error *err, int a, int b);
-
-    /**
-     *
-     * @param err
-     * @param a
-     * @param b
-     * @return
-     */
     bool p101_check_equals_string(struct p101_error *err, const char *a, const char *b);
-
-    /**
-     *
-     * @param err
-     * @param a
-     * @param b
-     * @return
-     */
     bool p101_check_not_equals_int(struct p101_error *err, int a, int b);
-
-    /**
-     *
-     * @param err
-     * @param a
-     * @param b
-     * @return
-     */
     bool p101_check_not_equals_string(struct p101_error *err, const char *a, const char *b);
 
 #ifdef __cplusplus
