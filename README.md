@@ -59,7 +59,7 @@ Tell CMake which compiler you want to use:
 To the see the list of possible compilers:
 
 ```bash
-cat supported_c_compilers
+cat supported_c_compilers.txt
 ```
 
 ## **Running the build.sh Script**
