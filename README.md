@@ -1,4 +1,4 @@
-# c-examples Repository Guide
+# lib_error Repository Guide
 
 Welcome to the `lib error` repository. This guide will help you set up and run the provided scripts.
 
