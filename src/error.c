@@ -26,7 +26,7 @@ struct p101_error
     char           *message;
     const char     *file_name;
     const char     *function_name;
-    size_t          line_number;
+    int             line_number;
     p101_error_type type;
     void (*reporter)(const struct p101_error *err);
 
@@ -38,8 +38,8 @@ struct p101_error
 };
 
 static void error_init(struct p101_error *err, void (*reporter)(const struct p101_error *err));
-static void setup_error(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, size_t line_number, const char *msg);
-static void setup_error_no_dup(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, size_t line_number, const char *msg);
+static void setup_error(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, int line_number, const char *msg);
+static void setup_error_no_dup(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, int line_number, const char *msg);
 
 struct p101_error *p101_error_create(bool report)
 {
@@ -144,16 +144,16 @@ void p101_error_default_error_reporter(const struct p101_error *err)
     if(err->type == P101_ERROR_ERRNO)
     {
         // NOLINTNEXTLINE(cert-err33-c)
-        fprintf(stderr, "ERROR (pid=%d): %s : %s : @ %zu : (errno = %d) : %s\n", pid, err->file_name, err->function_name, err->line_number, err->errno_code, msg);
+        fprintf(stderr, "ERROR (pid=%d): %s : %s : @ %d : (errno = %d) : %s\n", pid, err->file_name, err->function_name, err->line_number, err->errno_code, msg);
     }
     else
     {
         // NOLINTNEXTLINE(cert-err33-c)
-        fprintf(stderr, "ERROR (pid=%d): %s : %s : @ %zu : (error code = %d) : %s\n", pid, err->file_name, err->function_name, err->line_number, err->err_code, msg);
+        fprintf(stderr, "ERROR (pid=%d): %s : %s : @ %d : (error code = %d) : %s\n", pid, err->file_name, err->function_name, err->line_number, err->err_code, msg);
     }
 }
 
-static void setup_error(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, size_t line_number, const char *msg)
+static void setup_error(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, int line_number, const char *msg)
 {
     size_t      len;
     const char *tmp_msg;
@@ -192,7 +192,7 @@ static void setup_error(struct p101_error *err, p101_error_type type, const char
     }
 }
 
-static void setup_error_no_dup(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, size_t line_number, const char *msg)
+static void setup_error_no_dup(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, int line_number, const char *msg)
 {
     err->type          = type;
     err->file_name     = file_name;
@@ -202,7 +202,7 @@ static void setup_error_no_dup(struct p101_error *err, p101_error_type type, con
     err->const_message = msg;
 }
 
-void p101_error_check(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number)
+void p101_error_check(struct p101_error *err, const char *file_name, const char *function_name, int line_number)
 {
     const char *msg;
 
@@ -217,7 +217,7 @@ void p101_error_check(struct p101_error *err, const char *file_name, const char 
     }
 }
 
-void p101_error_errno(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number, errno_t err_code)
+void p101_error_errno(struct p101_error *err, const char *file_name, const char *function_name, int line_number, errno_t err_code)
 {
     const char *msg;
 
@@ -256,7 +256,7 @@ void p101_error_errno(struct p101_error *err, const char *file_name, const char 
     }
 }
 
-void p101_error_system(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number, const char *msg, int err_code)
+void p101_error_system(struct p101_error *err, const char *file_name, const char *function_name, int line_number, const char *msg, int err_code)
 {
     setup_error(err, P101_ERROR_SYSTEM, file_name, function_name, line_number, msg);
     err->err_code = err_code;
@@ -267,7 +267,7 @@ void p101_error_system(struct p101_error *err, const char *file_name, const char
     }
 }
 
-void p101_error_user(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number, const char *msg, int err_code)
+void p101_error_user(struct p101_error *err, const char *file_name, const char *function_name, int line_number, const char *msg, int err_code)
 {
     setup_error(err, P101_ERROR_USER, file_name, function_name, line_number, msg);
     err->err_code = err_code;

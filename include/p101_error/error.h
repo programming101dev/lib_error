@@ -51,10 +51,10 @@ extern "C"
     const char *p101_error_get_message(const struct p101_error *err);
     void        p101_error_reset(struct p101_error *err);
     void        p101_error_default_error_reporter(const struct p101_error *err);
-    void        p101_error_check(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number);
-    void        p101_error_errno(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number, errno_t err_code);
-    void        p101_error_system(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number, const char *msg, int err_code);
-    void        p101_error_user(struct p101_error *err, const char *file_name, const char *function_name, size_t line_number, const char *msg, int err_code);
+    void        p101_error_check(struct p101_error *err, const char *file_name, const char *function_name, int line_number);
+    void        p101_error_errno(struct p101_error *err, const char *file_name, const char *function_name, int line_number, errno_t err_code);
+    void        p101_error_system(struct p101_error *err, const char *file_name, const char *function_name, int line_number, const char *msg, int err_code);
+    void        p101_error_user(struct p101_error *err, const char *file_name, const char *function_name, int line_number, const char *msg, int err_code);
     bool        p101_error_has_error(const struct p101_error *err);
     bool        p101_error_has_no_error(const struct p101_error *err);
     bool        p101_error_is_errno(const struct p101_error *err, errno_t code);
