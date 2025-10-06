@@ -59,6 +59,9 @@ extern "C"
     bool        p101_error_has_no_error(const struct p101_error *err);
     bool        p101_error_is_errno(const struct p101_error *err, errno_t code);
     errno_t     p101_errno_get_errno(const struct p101_error *err);
+    bool        p101_error_is_error(const struct p101_error *err, p101_error_type type, int code);
+    bool        p101_error_copy(struct p101_error *dst, const struct p101_error *src);
+    void        p101_error_move(struct p101_error *dst, struct p101_error *src);
 
 #define P101_ERROR_RAISE_CHECK(err) p101_error_check((err), __FILE__, __func__, __LINE__)
 #define P101_ERROR_RAISE_ERRNO(err, code) p101_error_errno((err), __FILE__, __func__, __LINE__, (code))
