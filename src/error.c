@@ -50,7 +50,12 @@ struct p101_error *p101_error_create(bool report)
     struct p101_error *err = (struct p101_error *)malloc(sizeof *err);
     if(err != NULL)
     {
-        void (*reporter)(const struct p101_error *err) = report ? p101_error_default_error_reporter : NULL;
+        void (*reporter)(const struct p101_error *err) = NULL;
+
+        if(report)
+        {
+            reporter = p101_error_default_error_reporter;
+        }
         error_init(err, reporter);
     }
     return err;
@@ -89,7 +94,14 @@ bool p101_error_is_reporting(const struct p101_error *err)
 
 void p101_error_set_reporting(struct p101_error *err, bool on)
 {
-    err->reporter = on ? p101_error_default_error_reporter : NULL;
+    if(on)
+    {
+        err->reporter = p101_error_default_error_reporter;
+    }
+    else
+    {
+        err->reporter = NULL;
+    }
 }
 
 const char *p101_error_get_message(const struct p101_error *err)
@@ -245,7 +257,7 @@ bool p101_error_has_no_error(const struct p101_error *err)
 
 bool p101_error_is_errno(const struct p101_error *err, errno_t code)
 {
-    return (err->type == P101_ERROR_ERRNO) && (err->errno_code == code);
+    return (((err->type == P101_ERROR_ERRNO) && (err->errno_code == code)) != 0);
 }
 
 errno_t p101_errno_get_errno(const struct p101_error *err)
@@ -255,7 +267,7 @@ errno_t p101_errno_get_errno(const struct p101_error *err)
 
 bool p101_error_is_error(const struct p101_error *err, p101_error_type type, int code)
 {
-    return (err->type == type) && (err->err_code == code);
+    return (((err->type == type) && (err->err_code == code)) != 0);
 }
 
 /* New: deep copy and move */
