@@ -61,6 +61,15 @@ struct p101_error *p101_error_create(bool report)
     return err;
 }
 
+void p101_error_destroy(struct p101_error *err)
+{
+    if(err != NULL)
+    {
+        p101_error_reset(err);
+        free(err);
+    }
+}
+
 static void error_init(struct p101_error *err, void (*reporter)(const struct p101_error *err))
 {
     memset(err, 0, sizeof *err);
@@ -82,18 +91,26 @@ static void free_heap_message(struct p101_error *err)
 
 void p101_error_reset(struct p101_error *err)
 {
-    void (*reporter)(const struct p101_error *err) = err->reporter;
-    free_heap_message(err);
-    error_init(err, reporter);
+    if(err != NULL)
+    {
+        void (*reporter)(const struct p101_error *err) = err->reporter;
+        free_heap_message(err);
+        error_init(err, reporter);
+    }
 }
 
 bool p101_error_is_reporting(const struct p101_error *err)
 {
-    return err->reporter != NULL;
+    return (err != NULL && err->reporter != NULL) != 0;
 }
 
 void p101_error_set_reporting(struct p101_error *err, bool on)
 {
+    if(err == NULL)
+    {
+        return;
+    }
+
     if(on)
     {
         err->reporter = p101_error_default_error_reporter;
@@ -106,6 +123,10 @@ void p101_error_set_reporting(struct p101_error *err, bool on)
 
 const char *p101_error_get_message(const struct p101_error *err)
 {
+    if(err == NULL)
+    {
+        return NULL;
+    }
     if(err->message)
     {
         return err->message;
@@ -119,25 +140,32 @@ const char *p101_error_get_message(const struct p101_error *err)
 
 void p101_error_default_error_reporter(const struct p101_error *err)
 {
-    const char *msg = err->const_message ? err->const_message : err->message;
-    int         pid;
+    const char *msg;
+    long        pid;
+
+    if(err == NULL)
+    {
+        return;
+    }
+
+    msg = p101_error_get_message(err);
 
     if(msg == NULL)
     {
         msg = "<no message>";
     }
 
-    pid = (int)getpid();
+    pid = (long)getpid();
 
     if(err->type == P101_ERROR_ERRNO)
     {
         /* NOLINTNEXTLINE(cert-err33-c) */
-        fprintf(stderr, "ERROR (pid=%d): %s : %s : @ %d : (errno = %d) : %s\n", pid, err->file_name, err->function_name, err->line_number, err->errno_code, msg);
+        fprintf(stderr, "ERROR (pid=%ld): %s : %s : @ %d : (errno = %d) : %s\n", pid, err->file_name, err->function_name, err->line_number, err->errno_code, msg);
     }
     else
     {
         /* NOLINTNEXTLINE(cert-err33-c) */
-        fprintf(stderr, "ERROR (pid=%d): %s : %s : @ %d : (error code = %d) : %s\n", pid, err->file_name, err->function_name, err->line_number, err->err_code, msg);
+        fprintf(stderr, "ERROR (pid=%ld): %s : %s : @ %d : (error code = %d) : %s\n", pid, err->file_name, err->function_name, err->line_number, err->err_code, msg);
     }
 }
 
@@ -158,6 +186,7 @@ static void setup_error(struct p101_error *err, p101_error_type type, const char
     }
 
     memcpy(dup, src, len + 1);
+    free_heap_message(err);
 
     err->type          = type;
     err->file_name     = file_name;
@@ -169,6 +198,8 @@ static void setup_error(struct p101_error *err, p101_error_type type, const char
 
 static void setup_error_no_dup(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, int line_number, const char *msg)
 {
+    free_heap_message(err);
+
     err->type          = type;
     err->file_name     = file_name;
     err->function_name = function_name;
@@ -179,6 +210,11 @@ static void setup_error_no_dup(struct p101_error *err, p101_error_type type, con
 
 void p101_error_check(struct p101_error *err, const char *file_name, const char *function_name, int line_number)
 {
+    if(err == NULL)
+    {
+        return;
+    }
+
     setup_error(err, P101_ERROR_CHECK, file_name, function_name, line_number, "failed check");
     err->errno_code = -1;
 
@@ -191,7 +227,14 @@ void p101_error_check(struct p101_error *err, const char *file_name, const char 
 void p101_error_errno(struct p101_error *err, const char *file_name, const char *function_name, int line_number, errno_t err_code)
 {
     /* POSIX strerror is not thread-safe; keep behavior aligned with existing code base. */
-    const char *msg = strerror(err_code); /* NOLINT(concurrency-mt-unsafe) */
+    const char *msg;
+
+    if(err == NULL)
+    {
+        return;
+    }
+
+    msg = strerror(err_code); /* NOLINT(concurrency-mt-unsafe) */
 
     if(msg == NULL)
     {
@@ -225,6 +268,11 @@ void p101_error_errno(struct p101_error *err, const char *file_name, const char 
 
 void p101_error_system(struct p101_error *err, const char *file_name, const char *function_name, int line_number, const char *msg, int err_code)
 {
+    if(err == NULL)
+    {
+        return;
+    }
+
     setup_error(err, P101_ERROR_SYSTEM, file_name, function_name, line_number, msg);
     err->err_code = err_code;
 
@@ -236,6 +284,11 @@ void p101_error_system(struct p101_error *err, const char *file_name, const char
 
 void p101_error_user(struct p101_error *err, const char *file_name, const char *function_name, int line_number, const char *msg, int err_code)
 {
+    if(err == NULL)
+    {
+        return;
+    }
+
     setup_error(err, P101_ERROR_USER, file_name, function_name, line_number, msg);
     err->err_code = err_code;
 
@@ -247,27 +300,32 @@ void p101_error_user(struct p101_error *err, const char *file_name, const char *
 
 bool p101_error_has_error(const struct p101_error *err)
 {
-    return err->type != P101_ERROR_NONE;
+    return (err != NULL && err->type != P101_ERROR_NONE) != 0;
 }
 
 bool p101_error_has_no_error(const struct p101_error *err)
 {
-    return err->type == P101_ERROR_NONE;
+    return (err == NULL || err->type == P101_ERROR_NONE) != 0;
 }
 
 bool p101_error_is_errno(const struct p101_error *err, errno_t code)
 {
-    return (((err->type == P101_ERROR_ERRNO) && (err->errno_code == code)) != 0);
+    return (err != NULL && err->type == P101_ERROR_ERRNO && err->errno_code == code) != 0;
 }
 
 errno_t p101_errno_get_errno(const struct p101_error *err)
 {
+    if(err == NULL)
+    {
+        return 0;
+    }
+
     return err->errno_code;
 }
 
 bool p101_error_is_error(const struct p101_error *err, p101_error_type type, int code)
 {
-    return (((err->type == type) && (err->err_code == code)) != 0);
+    return (err != NULL && err->type == type && err->err_code == code) != 0;
 }
 
 /* New: deep copy and move */

@@ -26,7 +26,14 @@ extern "C"
 {
 #endif
 
-#ifndef __STDC_LIB_EXT1__
+/* Annex K is optional and absent on glibc, FreeBSD libc, and Apple libc.
+ * So a fallback typedef is required on every platform we support. cppcheck
+ * already knows errno_t as a built-in type and reports a syntax error on
+ * the redefinition, so the fallback is hidden from it (__CPPCHECK__).
+ * Newer cppcheck (>= 2.14) parses inactive preprocessor branches too and
+ * still trips on the typedef despite the guard, hence the suppression. */
+#if !defined(__STDC_LIB_EXT1__) && !defined(__CPPCHECK__)
+    /* cppcheck-suppress syntaxError */
     typedef int errno_t;
 #endif
 
@@ -45,6 +52,7 @@ extern "C"
     struct p101_error;
 
     struct p101_error *p101_error_create(bool report);
+    void               p101_error_destroy(struct p101_error *err);
 
     bool        p101_error_is_reporting(const struct p101_error *err);
     void        p101_error_set_reporting(struct p101_error *err, bool on);

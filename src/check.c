@@ -80,6 +80,18 @@ bool p101_check_equals_int(struct p101_error *err, int a, int b)
 
 bool p101_check_equals_string(struct p101_error *err, const char *a, const char *b)
 {
+    if(a == NULL || b == NULL)
+    {
+        if(a != b)
+        {
+            P101_ERROR_RAISE_CHECK(err);
+
+            return false;
+        }
+
+        return true;
+    }
+
     if(strcmp(a, b) != 0)
     {
         P101_ERROR_RAISE_CHECK(err);
@@ -104,6 +116,18 @@ bool p101_check_not_equals_int(struct p101_error *err, int a, int b)
 
 bool p101_check_not_equals_string(struct p101_error *err, const char *a, const char *b)
 {
+    if(a == NULL || b == NULL)
+    {
+        if(a == b)
+        {
+            P101_ERROR_RAISE_CHECK(err);
+
+            return false;
+        }
+
+        return true;
+    }
+
     if(strcmp(a, b) == 0)
     {
         P101_ERROR_RAISE_CHECK(err);

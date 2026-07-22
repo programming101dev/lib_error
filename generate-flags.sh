@@ -3,6 +3,15 @@
 # Exit the script if any command fails
 set -e
 
+# --help / -h -> description, exit 0 (P101 uniform CLI help)
+case " $* " in
+  *" --help "*|*" -h "*)
+    cat <<'P101_USAGE'
+generate-flags.sh — takes no command-line options; run with no arguments.
+P101_USAGE
+    exit 0 ;;
+esac
+
 # Function to detect system architecture
 detect_architecture()
 {
@@ -56,6 +65,13 @@ process_compiler_flags()
     local supported_flags=()
 
     for flag in "${flags[@]}"; do
+        case "$flag" in
+            -Wleading-whitespace*)
+                echo "Flag '$flag' is intentionally skipped; clang-format uses leading blanks."
+                continue
+                ;;
+        esac
+
         is_flag_supported "$compiler" "$flag" supported_flags
     done
 
