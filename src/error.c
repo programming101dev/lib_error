@@ -16,6 +16,7 @@
 
 #include "p101_error/error.h"
 #include <errno.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -44,6 +45,7 @@ static void error_init(struct p101_error *err, void (*reporter)(const struct p10
 static void free_heap_message(struct p101_error *err);
 static void setup_error(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, int line_number, const char *msg);
 static void setup_error_no_dup(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, int line_number, const char *msg);
+static void setup_error_owned(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, int line_number, char *msg);
 
 struct p101_error *p101_error_create(bool report)
 {
@@ -208,6 +210,19 @@ static void setup_error_no_dup(struct p101_error *err, p101_error_type type, con
     err->const_message = (msg != NULL) ? msg : "<No message>";
 }
 
+/* Takes ownership of msg, which must be a heap allocation. */
+static void setup_error_owned(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, int line_number, char *msg)
+{
+    free_heap_message(err);
+
+    err->type          = type;
+    err->file_name     = file_name;
+    err->function_name = function_name;
+    err->line_number   = line_number;
+    err->message       = msg;
+    err->const_message = NULL;
+}
+
 void p101_error_check(struct p101_error *err, const char *file_name, const char *function_name, int line_number)
 {
     if(err == NULL)
@@ -298,6 +313,67 @@ void p101_error_user(struct p101_error *err, const char *file_name, const char *
     }
 }
 
+#ifdef __GNUC__
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
+
+void p101_error_user_printf(struct p101_error *err, const char *file_name, const char *function_name, int line_number, int err_code, const char *fmt, ...)
+{
+    va_list args;
+    va_list args_copy;
+    int     needed;
+    char   *buf;
+
+    if(err == NULL)
+    {
+        return;
+    }
+
+    if(fmt == NULL)
+    {
+        p101_error_user(err, file_name, function_name, line_number, NULL, err_code);
+        return;
+    }
+
+    va_start(args, fmt);
+    va_copy(args_copy, args);
+    needed = vsnprintf(NULL, 0, fmt, args);    // NOLINT(cert-err33-c)
+    va_end(args);
+
+    if(needed < 0)
+    {
+        /* Formatting failed; fall back to the raw format string as the message. */
+        va_end(args_copy);
+        p101_error_user(err, file_name, function_name, line_number, fmt, err_code);
+        return;
+    }
+
+    buf = (char *)malloc((size_t)needed + 1);
+
+    if(buf == NULL)
+    {
+        /* Out of memory; fall back to the raw format string as the message. */
+        va_end(args_copy);
+        p101_error_user(err, file_name, function_name, line_number, fmt, err_code);
+        return;
+    }
+
+    vsnprintf(buf, (size_t)needed + 1, fmt, args_copy);    // NOLINT(cert-err33-c)
+    va_end(args_copy);
+    setup_error_owned(err, P101_ERROR_USER, file_name, function_name, line_number, buf);
+    err->err_code = err_code;
+
+    if(err->reporter)
+    {
+        err->reporter(err);
+    }
+}
+
+#ifdef __GNUC__
+    #pragma GCC diagnostic pop
+#endif
+
 bool p101_error_has_error(const struct p101_error *err)
 {
     return (err != NULL && err->type != P101_ERROR_NONE) != 0;
@@ -313,7 +389,32 @@ bool p101_error_is_errno(const struct p101_error *err, errno_t code)
     return (err != NULL && err->type == P101_ERROR_ERRNO && err->errno_code == code) != 0;
 }
 
-errno_t p101_errno_get_errno(const struct p101_error *err)
+p101_error_type p101_error_get_type(const struct p101_error *err)
+{
+    if(err == NULL)
+    {
+        return P101_ERROR_NONE;
+    }
+
+    return err->type;
+}
+
+int p101_error_get_code(const struct p101_error *err)
+{
+    if(err == NULL)
+    {
+        return 0;
+    }
+
+    if(err->type == P101_ERROR_ERRNO)
+    {
+        return err->errno_code;
+    }
+
+    return err->err_code;
+}
+
+errno_t p101_error_get_errno(const struct p101_error *err)
 {
     if(err == NULL)
     {
@@ -321,6 +422,42 @@ errno_t p101_errno_get_errno(const struct p101_error *err)
     }
 
     return err->errno_code;
+}
+
+const char *p101_error_get_file_name(const struct p101_error *err)
+{
+    if(err == NULL)
+    {
+        return NULL;
+    }
+
+    return err->file_name;
+}
+
+const char *p101_error_get_function_name(const struct p101_error *err)
+{
+    if(err == NULL)
+    {
+        return NULL;
+    }
+
+    return err->function_name;
+}
+
+int p101_error_get_line_number(const struct p101_error *err)
+{
+    if(err == NULL)
+    {
+        return 0;
+    }
+
+    return err->line_number;
+}
+
+/* Older name for p101_error_get_errno(); kept for compatibility. */
+errno_t p101_errno_get_errno(const struct p101_error *err)
+{
+    return p101_error_get_errno(err);
 }
 
 bool p101_error_is_error(const struct p101_error *err, p101_error_type type, int code)

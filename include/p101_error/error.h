@@ -17,7 +17,14 @@
  * limitations under the License.
  */
 
+/*
+ * Thread-safety: a struct p101_error is NOT thread-safe and must not be
+ * shared between threads. The convention is one error object per thread,
+ * matching the one-env-per-thread convention in p101_env.
+ */
+
 #include <errno.h>
+#include <p101_error/attributes.h>
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -51,7 +58,7 @@ extern "C"
 
     struct p101_error;
 
-    struct p101_error *p101_error_create(bool report);
+    struct p101_error *p101_error_create(bool report) P101_ATTR_MALLOC P101_ATTR_WARN_UNUSED_RESULT;
     void               p101_error_destroy(struct p101_error *err);
 
     bool        p101_error_is_reporting(const struct p101_error *err);
@@ -63,18 +70,32 @@ extern "C"
     void        p101_error_errno(struct p101_error *err, const char *file_name, const char *function_name, int line_number, errno_t err_code);
     void        p101_error_system(struct p101_error *err, const char *file_name, const char *function_name, int line_number, const char *msg, int err_code);
     void        p101_error_user(struct p101_error *err, const char *file_name, const char *function_name, int line_number, const char *msg, int err_code);
+    void        p101_error_user_printf(struct p101_error *err, const char *file_name, const char *function_name, int line_number, int err_code, const char *fmt, ...) P101_ATTR_PRINTF(6, 7);
     bool        p101_error_has_error(const struct p101_error *err);
     bool        p101_error_has_no_error(const struct p101_error *err);
     bool        p101_error_is_errno(const struct p101_error *err, errno_t code);
-    errno_t     p101_errno_get_errno(const struct p101_error *err);
     bool        p101_error_is_error(const struct p101_error *err, p101_error_type type, int code);
     bool        p101_error_copy(struct p101_error *dst, const struct p101_error *src);
     void        p101_error_move(struct p101_error *dst, struct p101_error *src);
+
+    /* Inspection: these only read an error the caller already received through
+     * the normal (env, err) channel -- there is deliberately no way to install
+     * custom handling at raise time. */
+    p101_error_type p101_error_get_type(const struct p101_error *err);
+    int             p101_error_get_code(const struct p101_error *err);
+    errno_t         p101_error_get_errno(const struct p101_error *err);
+    const char     *p101_error_get_file_name(const struct p101_error *err);
+    const char     *p101_error_get_function_name(const struct p101_error *err);
+    int             p101_error_get_line_number(const struct p101_error *err);
+
+    /* Older name for p101_error_get_errno(); kept for compatibility. */
+    errno_t p101_errno_get_errno(const struct p101_error *err);
 
 #define P101_ERROR_RAISE_CHECK(err) p101_error_check((err), __FILE__, __func__, __LINE__)
 #define P101_ERROR_RAISE_ERRNO(err, code) p101_error_errno((err), __FILE__, __func__, __LINE__, (code))
 #define P101_ERROR_RAISE_SYSTEM(err, msg, code) p101_error_system((err), __FILE__, __func__, __LINE__, (msg), (code))
 #define P101_ERROR_RAISE_USER(err, msg, code) p101_error_user((err), __FILE__, __func__, __LINE__, (msg), (code))
+#define P101_ERROR_RAISE_USER_PRINTF(err, code, ...) p101_error_user_printf((err), __FILE__, __func__, __LINE__, (code), __VA_ARGS__)
 
 #ifdef __cplusplus
 }

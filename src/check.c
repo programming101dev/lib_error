@@ -16,6 +16,7 @@
 
 #include "p101_error/check.h"
 #include "p101_error/error.h"
+#include <stdint.h>
 #include <string.h>
 
 bool p101_check_not_null(struct p101_error *err, const void *ptr)
@@ -129,6 +130,174 @@ bool p101_check_not_equals_string(struct p101_error *err, const char *a, const c
     }
 
     if(strcmp(a, b) == 0)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_greater_than_intmax(struct p101_error *err, intmax_t a, intmax_t b)
+{
+    if(a <= b)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_greater_than_uintmax(struct p101_error *err, uintmax_t a, uintmax_t b)
+{
+    if(a <= b)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_greater_than_double(struct p101_error *err, double a, double b)
+{
+    if(a <= b)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_less_than_intmax(struct p101_error *err, intmax_t a, intmax_t b)
+{
+    if(a >= b)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_less_than_uintmax(struct p101_error *err, uintmax_t a, uintmax_t b)
+{
+    if(a >= b)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_less_than_double(struct p101_error *err, double a, double b)
+{
+    if(a >= b)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_equals_intmax(struct p101_error *err, intmax_t a, intmax_t b)
+{
+    if(a != b)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_equals_uintmax(struct p101_error *err, uintmax_t a, uintmax_t b)
+{
+    if(a != b)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_not_equals_intmax(struct p101_error *err, intmax_t a, intmax_t b)
+{
+    if(a == b)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_not_equals_uintmax(struct p101_error *err, uintmax_t a, uintmax_t b)
+{
+    if(a == b)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_in_range_int(struct p101_error *err, int value, int min_value, int max_value)
+{
+    if(value < min_value || value > max_value)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_in_range_intmax(struct p101_error *err, intmax_t value, intmax_t min_value, intmax_t max_value)
+{
+    if(value < min_value || value > max_value)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_in_range_uintmax(struct p101_error *err, uintmax_t value, uintmax_t min_value, uintmax_t max_value)
+{
+    if(value < min_value || value > max_value)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_in_range_double(struct p101_error *err, double value, double min_value, double max_value)
+{
+    if(value < min_value || value > max_value)
     {
         P101_ERROR_RAISE_CHECK(err);
 

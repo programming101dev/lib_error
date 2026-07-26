@@ -14,10 +14,17 @@ set(CMAKE_C_EXTENSIONS OFF)
 set(STANDARD_FLAGS
         -D_POSIX_C_SOURCE=200809L
         -D_XOPEN_SOURCE=700
-        #-D_GNU_SOURCE
-        #-D_DARWIN_C_SOURCE
-        #-D__BSD_VISIBLE
         -Werror
+)
+
+set(DARWIN_STANDARD_FLAGS
+        -D_DARWIN_C_SOURCE
+)
+
+set(LINUX_STANDARD_FLAGS
+)
+
+set(BSD_STANDARD_FLAGS
 )
 
 # Define library targets
@@ -31,6 +38,7 @@ set(p101_error_SOURCES
 
 # Header files for installation, maintaining subdirectory structure
 set(p101_error_HEADERS
+        include/p101_error/attributes.h
         include/p101_error/check.h
         include/p101_error/error.h
 )
