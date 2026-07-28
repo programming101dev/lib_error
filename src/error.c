@@ -401,7 +401,7 @@ p101_error_type p101_error_get_type(const struct p101_error *err)
 
 int p101_error_get_code(const struct p101_error *err)
 {
-    if(err == NULL)
+    if(err == NULL || err->type == P101_ERROR_NONE)
     {
         return 0;
     }
@@ -416,7 +416,7 @@ int p101_error_get_code(const struct p101_error *err)
 
 errno_t p101_error_get_errno(const struct p101_error *err)
 {
-    if(err == NULL)
+    if(err == NULL || err->type != P101_ERROR_ERRNO)
     {
         return 0;
     }

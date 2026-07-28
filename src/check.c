@@ -16,6 +16,7 @@
 
 #include "p101_error/check.h"
 #include "p101_error/error.h"
+#include <math.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -45,7 +46,7 @@ bool p101_check_null(struct p101_error *err, const void *ptr)
 
 bool p101_check_greater_than_int(struct p101_error *err, int a, int b)
 {
-    if(a <= b)
+    if(isnan(a) || isnan(b) || a <= b)
     {
         P101_ERROR_RAISE_CHECK(err);
 
@@ -57,7 +58,7 @@ bool p101_check_greater_than_int(struct p101_error *err, int a, int b)
 
 bool p101_check_less_than_int(struct p101_error *err, int a, int b)
 {
-    if(a >= b)
+    if(isnan(a) || isnan(b) || a >= b)
     {
         P101_ERROR_RAISE_CHECK(err);
 
@@ -261,7 +262,7 @@ bool p101_check_not_equals_uintmax(struct p101_error *err, uintmax_t a, uintmax_
 
 bool p101_check_in_range_int(struct p101_error *err, int value, int min_value, int max_value)
 {
-    if(value < min_value || value > max_value)
+    if(isnan(value) || isnan(min_value) || isnan(max_value) || value < min_value || value > max_value)
     {
         P101_ERROR_RAISE_CHECK(err);
 
