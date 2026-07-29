@@ -71,7 +71,9 @@ This compiles through the strict analysis pipeline: the clang-format check, clan
 ## **Testing**
 
 `./check.sh` is the one command to run before you submit: the format check, the strict build, the tests, and a short fuzz smoke run, with a single PASS/FAIL at the end.
-This library does not have a `test/` tree yet, so `./test.sh` reports that and exits; the rest of the gate still runs.
+The test tree covers error state, copy/move ownership, generic comparisons, and
+strict C++ header use. The fuzz harness exercises arbitrary user messages,
+copy/reset behavior, and comparison invariants.
 
 ## **Installing**
 

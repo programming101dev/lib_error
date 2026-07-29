@@ -176,6 +176,18 @@ bool p101_check_greater_than_double(struct p101_error *err, double a, double b)
     return true;
 }
 
+bool p101_check_greater_than_long_double(struct p101_error *err, long double a, long double b)
+{
+    if(isnan(a) || isnan(b) || a <= b)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
 bool p101_check_less_than_intmax(struct p101_error *err, intmax_t a, intmax_t b)
 {
     if(a >= b)
@@ -201,6 +213,18 @@ bool p101_check_less_than_uintmax(struct p101_error *err, uintmax_t a, uintmax_t
 }
 
 bool p101_check_less_than_double(struct p101_error *err, double a, double b)
+{
+    if(isnan(a) || isnan(b) || a >= b)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_less_than_long_double(struct p101_error *err, long double a, long double b)
 {
     if(isnan(a) || isnan(b) || a >= b)
     {
@@ -297,6 +321,18 @@ bool p101_check_in_range_uintmax(struct p101_error *err, uintmax_t value, uintma
 }
 
 bool p101_check_in_range_double(struct p101_error *err, double value, double min_value, double max_value)
+{
+    if(isnan(value) || isnan(min_value) || isnan(max_value) || value < min_value || value > max_value)
+    {
+        P101_ERROR_RAISE_CHECK(err);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool p101_check_in_range_long_double(struct p101_error *err, long double value, long double min_value, long double max_value)
 {
     if(isnan(value) || isnan(min_value) || isnan(max_value) || value < min_value || value > max_value)
     {

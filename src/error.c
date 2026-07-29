@@ -143,6 +143,8 @@ const char *p101_error_get_message(const struct p101_error *err)
 void p101_error_default_error_reporter(const struct p101_error *err)
 {
     const char *msg;
+    const char *reported_file;
+    const char *reported_function;
     long        pid;
 
     if(err == NULL)
@@ -157,17 +159,19 @@ void p101_error_default_error_reporter(const struct p101_error *err)
         msg = "<no message>";
     }
 
-    pid = (long)getpid();
+    reported_file     = (err->file_name == NULL) ? "?" : err->file_name;
+    reported_function = (err->function_name == NULL) ? "?" : err->function_name;
+    pid               = (long)getpid();
 
     if(err->type == P101_ERROR_ERRNO)
     {
         /* NOLINTNEXTLINE(cert-err33-c) */
-        fprintf(stderr, "ERROR (pid=%ld): %s : %s : @ %d : (errno = %d) : %s\n", pid, err->file_name, err->function_name, err->line_number, err->errno_code, msg);
+        fprintf(stderr, "ERROR (pid=%ld): %s : %s : @ %d : (errno = %d) : %s\n", pid, reported_file, reported_function, err->line_number, err->errno_code, msg);
     }
     else
     {
         /* NOLINTNEXTLINE(cert-err33-c) */
-        fprintf(stderr, "ERROR (pid=%ld): %s : %s : @ %d : (error code = %d) : %s\n", pid, err->file_name, err->function_name, err->line_number, err->err_code, msg);
+        fprintf(stderr, "ERROR (pid=%ld): %s : %s : @ %d : (error code = %d) : %s\n", pid, reported_file, reported_function, err->line_number, err->err_code, msg);
     }
 }
 
@@ -182,8 +186,9 @@ static void setup_error(struct p101_error *err, p101_error_type type, const char
 
     if(dup == NULL)
     {
-        /* Fall back to const message path on OOM. */
-        setup_error_no_dup(err, type, file_name, function_name, line_number, src);
+        /* Never retain a caller-owned pointer on the allocation-failure path:
+         * it may refer to a stack buffer that dies before the error is read. */
+        setup_error_no_dup(err, type, file_name, function_name, line_number, "out of memory while recording error");
         return;
     }
 
@@ -462,10 +467,11 @@ errno_t p101_errno_get_errno(const struct p101_error *err)
 
 bool p101_error_is_error(const struct p101_error *err, p101_error_type type, int code)
 {
-    return (err != NULL && err->type == type && err->err_code == code) != 0;
+    return (err != NULL && type != P101_ERROR_NONE && err->type == type && p101_error_get_code(err) == code) != 0;
 }
 
-/* New: deep copy and move */
+/* Copy and move. Heap messages are copied; immutable emergency fallbacks are
+ * safely shared. */
 
 bool p101_error_copy(struct p101_error *dst, const struct p101_error *src)
 {
