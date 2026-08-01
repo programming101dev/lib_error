@@ -1,6 +1,7 @@
 #include "p101_error/check.h"
 #include "p101_error/error.h"
 #include <errno.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -81,11 +82,69 @@ static void test_generic_checks(void)
     p101_error_destroy(err);
 }
 
+struct errno_thread
+{
+    errno_t code;
+    char    expected[128];
+    int     failed;
+};
+
+static void *raise_errno_repeatedly(void *context)
+{
+    struct errno_thread *thread;
+
+    thread = (struct errno_thread *)context;
+    for(size_t index = 0U; index < 10000U; index++)
+    {
+        struct p101_error *err;
+
+        err = p101_error_create(false);
+        if(err == NULL)
+        {
+            thread->failed = 1;
+            break;
+        }
+        p101_error_errno(err, __FILE__, __func__, __LINE__, thread->code);
+        if(!p101_error_is_errno(err, thread->code) || p101_error_get_message(err) == NULL || strcmp(p101_error_get_message(err), thread->expected) != 0)
+        {
+            thread->failed = 1;
+        }
+        p101_error_destroy(err);
+    }
+    return NULL;
+}
+
+static void test_concurrent_errno_messages(void)
+{
+    struct errno_thread contexts[] = {{ENOENT, "", 0}, {EACCES, "", 0}, {EINVAL, "", 0}, {ERANGE, "", 0}};
+    int                 created[sizeof(contexts) / sizeof(contexts[0])] = {0};
+    pthread_t           threads[sizeof(contexts) / sizeof(contexts[0])];
+
+    for(size_t index = 0U; index < sizeof(threads) / sizeof(threads[0]); index++)
+    {
+        int result;
+
+        EXPECT(strerror_r(contexts[index].code, contexts[index].expected, sizeof(contexts[index].expected)) == 0);
+        result         = pthread_create(&threads[index], NULL, raise_errno_repeatedly, &contexts[index]);
+        created[index] = result == 0;
+        EXPECT(result == 0);
+    }
+    for(size_t index = 0U; index < sizeof(threads) / sizeof(threads[0]); index++)
+    {
+        if(created[index] != 0)
+        {
+            EXPECT(pthread_join(threads[index], NULL) == 0);
+            EXPECT(contexts[index].failed == 0);
+        }
+    }
+}
+
 int main(void)
 {
     test_error_state();
     test_copy_and_move();
     test_generic_checks();
+    test_concurrent_errno_messages();
 
     if(failures != 0)
     {

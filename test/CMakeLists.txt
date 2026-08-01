@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 project(p101_error_tests C CXX)
 enable_testing()
+find_package(Threads REQUIRED)
 
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -22,10 +23,11 @@ add_library(p101_error_under_test STATIC
 target_include_directories(p101_error_under_test PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/../include"
 )
+target_compile_definitions(p101_error_under_test PRIVATE _POSIX_C_SOURCE=200809L)
 target_compile_options(p101_error_under_test PRIVATE ${P101_TEST_COVERAGE_FLAGS})
 
 add_executable(test_error test_error.c)
-target_link_libraries(test_error PRIVATE p101_error_under_test m)
+target_link_libraries(test_error PRIVATE p101_error_under_test m Threads::Threads)
 target_compile_options(test_error PRIVATE ${P101_TEST_COVERAGE_FLAGS})
 target_link_options(test_error PRIVATE ${P101_TEST_COVERAGE_FLAGS})
 add_test(NAME test_error COMMAND test_error)

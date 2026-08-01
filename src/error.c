@@ -24,6 +24,11 @@
 #include <string.h>
 #include <unistd.h>
 
+enum
+{
+    P101_ERROR_MESSAGE_BUFFER_SIZE = 1024
+};
+
 struct p101_error
 {
     const char     *const_message; /* non-owned, static or caller-managed */
@@ -246,24 +251,23 @@ void p101_error_check(struct p101_error *err, const char *file_name, const char 
 
 void p101_error_errno(struct p101_error *err, const char *file_name, const char *function_name, int line_number, errno_t err_code)
 {
-    /* POSIX strerror is not thread-safe; keep behavior aligned with existing code base. */
-    const char *msg;
+    char message[P101_ERROR_MESSAGE_BUFFER_SIZE];
+    int  result;
 
     if(err == NULL)
     {
         return;
     }
 
-    msg = strerror(err_code); /* NOLINT(concurrency-mt-unsafe) */
-
-    if(msg == NULL)
+    result = strerror_r(err_code, message, sizeof(message));
+    if(result != 0)
     {
         const char *static_msg;
-        if(errno == EINVAL)
+        if(result == EINVAL)
         {
             static_msg = "bad errno";
         }
-        else if(errno == ERANGE)
+        else if(result == ERANGE)
         {
             static_msg = "out of memory";
         }
@@ -276,7 +280,7 @@ void p101_error_errno(struct p101_error *err, const char *file_name, const char 
     }
     else
     {
-        setup_error(err, P101_ERROR_ERRNO, file_name, function_name, line_number, msg);
+        setup_error(err, P101_ERROR_ERRNO, file_name, function_name, line_number, message);
         err->errno_code = err_code;
     }
 
