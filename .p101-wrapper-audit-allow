@@ -7,6 +7,10 @@ src/error.c:*:getpid
 src/error.c:*:malloc
 src/error.c:*:memcpy
 src/error.c:*:memset
-src/error.c:*:strerror
+src/error.c:*:reporter
+src/error.c:*:strerror_r
 src/error.c:*:strlen
+src/error.c:*:va_copy
+src/error.c:*:va_end
+src/error.c:*:va_start
 src/error.c:*:vsnprintf
