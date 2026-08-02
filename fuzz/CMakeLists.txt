@@ -19,6 +19,7 @@ add_executable(fuzz
 target_include_directories(fuzz PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/../include"
 )
+target_compile_definitions(fuzz PRIVATE _POSIX_C_SOURCE=200809L)
 target_compile_options(fuzz PRIVATE ${P101_FUZZ_FLAGS})
 target_link_options(fuzz PRIVATE ${P101_FUZZ_FLAGS})
 target_link_libraries(fuzz PRIVATE m)
