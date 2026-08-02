@@ -28,6 +28,7 @@ target_compile_options(p101_error_under_test PRIVATE ${P101_TEST_COVERAGE_FLAGS}
 
 add_executable(test_error test_error.c)
 target_link_libraries(test_error PRIVATE p101_error_under_test m Threads::Threads)
+target_compile_definitions(test_error PRIVATE _POSIX_C_SOURCE=200809L)
 target_compile_options(test_error PRIVATE ${P101_TEST_COVERAGE_FLAGS})
 target_link_options(test_error PRIVATE ${P101_TEST_COVERAGE_FLAGS})
 add_test(NAME test_error COMMAND test_error)
