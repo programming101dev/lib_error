@@ -130,19 +130,27 @@ void p101_error_set_reporting(struct p101_error *err, bool on)
 
 const char *p101_error_get_message(const struct p101_error *err)
 {
+    const char *p101_single_result_;
     if(err == NULL)
     {
-        return NULL;
+        p101_single_result_ = NULL;
+        goto p101_single_exit_;
     }
     if(err->message)
     {
-        return err->message;
+        p101_single_result_ = err->message;
+        goto p101_single_exit_;
     }
     if(err->const_message)
     {
-        return err->const_message;
+        p101_single_result_ = err->const_message;
+        goto p101_single_exit_;
     }
-    return NULL;
+    p101_single_result_ = NULL;
+    goto p101_single_exit_;
+
+p101_single_exit_:
+    return p101_single_result_;
 }
 
 void p101_error_default_error_reporter(const struct p101_error *err)
@@ -336,13 +344,13 @@ void p101_error_user_printf(struct p101_error *err, const char *file_name, const
 
     if(err == NULL)
     {
-        return;
+        goto p101_single_exit_;
     }
 
     if(fmt == NULL)
     {
         p101_error_user(err, file_name, function_name, line_number, NULL, err_code);
-        return;
+        goto p101_single_exit_;
     }
 
     va_start(args, fmt);
@@ -355,7 +363,7 @@ void p101_error_user_printf(struct p101_error *err, const char *file_name, const
         /* Formatting failed; fall back to the raw format string as the message. */
         va_end(args_copy);
         p101_error_user(err, file_name, function_name, line_number, fmt, err_code);
-        return;
+        goto p101_single_exit_;
     }
 
     buf = (char *)malloc((size_t)needed + 1);
@@ -365,7 +373,7 @@ void p101_error_user_printf(struct p101_error *err, const char *file_name, const
         /* Out of memory; fall back to the raw format string as the message. */
         va_end(args_copy);
         p101_error_user(err, file_name, function_name, line_number, fmt, err_code);
-        return;
+        goto p101_single_exit_;
     }
 
     vsnprintf(buf, (size_t)needed + 1, fmt, args_copy);    // NOLINT(cert-err33-c)
@@ -377,6 +385,9 @@ void p101_error_user_printf(struct p101_error *err, const char *file_name, const
     {
         err->reporter(err);
     }
+
+p101_single_exit_:
+    return;
 }
 
 #ifdef __GNUC__
@@ -400,67 +411,104 @@ bool p101_error_is_errno(const struct p101_error *err, errno_t code)
 
 p101_error_type p101_error_get_type(const struct p101_error *err)
 {
+    p101_error_type p101_single_result_;
     if(err == NULL)
     {
-        return P101_ERROR_NONE;
+        p101_single_result_ = P101_ERROR_NONE;
+        goto p101_single_exit_;
     }
 
-    return err->type;
+    p101_single_result_ = err->type;
+    goto p101_single_exit_;
+
+p101_single_exit_:
+    return p101_single_result_;
 }
 
 int p101_error_get_code(const struct p101_error *err)
 {
+    int p101_single_result_;
     if(err == NULL || err->type == P101_ERROR_NONE)
     {
-        return 0;
+        p101_single_result_ = 0;
+        goto p101_single_exit_;
     }
 
     if(err->type == P101_ERROR_ERRNO)
     {
-        return err->errno_code;
+        p101_single_result_ = err->errno_code;
+        goto p101_single_exit_;
     }
 
-    return err->err_code;
+    p101_single_result_ = err->err_code;
+    goto p101_single_exit_;
+
+p101_single_exit_:
+    return p101_single_result_;
 }
 
 errno_t p101_error_get_errno(const struct p101_error *err)
 {
+    errno_t p101_single_result_;
     if(err == NULL || err->type != P101_ERROR_ERRNO)
     {
-        return 0;
+        p101_single_result_ = 0;
+        goto p101_single_exit_;
     }
 
-    return err->errno_code;
+    p101_single_result_ = err->errno_code;
+    goto p101_single_exit_;
+
+p101_single_exit_:
+    return p101_single_result_;
 }
 
 const char *p101_error_get_file_name(const struct p101_error *err)
 {
+    const char *p101_single_result_;
     if(err == NULL)
     {
-        return NULL;
+        p101_single_result_ = NULL;
+        goto p101_single_exit_;
     }
 
-    return err->file_name;
+    p101_single_result_ = err->file_name;
+    goto p101_single_exit_;
+
+p101_single_exit_:
+    return p101_single_result_;
 }
 
 const char *p101_error_get_function_name(const struct p101_error *err)
 {
+    const char *p101_single_result_;
     if(err == NULL)
     {
-        return NULL;
+        p101_single_result_ = NULL;
+        goto p101_single_exit_;
     }
 
-    return err->function_name;
+    p101_single_result_ = err->function_name;
+    goto p101_single_exit_;
+
+p101_single_exit_:
+    return p101_single_result_;
 }
 
 int p101_error_get_line_number(const struct p101_error *err)
 {
+    int p101_single_result_;
     if(err == NULL)
     {
-        return 0;
+        p101_single_result_ = 0;
+        goto p101_single_exit_;
     }
 
-    return err->line_number;
+    p101_single_result_ = err->line_number;
+    goto p101_single_exit_;
+
+p101_single_exit_:
+    return p101_single_result_;
 }
 
 /* Older name for p101_error_get_errno(); kept for compatibility. */
@@ -479,21 +527,25 @@ bool p101_error_is_error(const struct p101_error *err, p101_error_type type, int
 
 bool p101_error_copy(struct p101_error *dst, const struct p101_error *src)
 {
+    bool  p101_single_result_;
     char *new_msg;
     void (*dst_reporter)(const struct p101_error *err);
 
     if(dst == NULL)
     {
-        return false;
+        p101_single_result_ = false;
+        goto p101_single_exit_;
     }
     if(src == NULL || !p101_error_has_error(src))
     {
         p101_error_reset(dst);
-        return true;
+        p101_single_result_ = true;
+        goto p101_single_exit_;
     }
     if(dst == src)
     {
-        return true;
+        p101_single_result_ = true;
+        goto p101_single_exit_;
     }
 
     /* Prepare new message first, so dst remains unchanged on OOM. */
@@ -505,7 +557,8 @@ bool p101_error_copy(struct p101_error *dst, const struct p101_error *src)
         new_msg    = (char *)malloc(len + 1);
         if(new_msg == NULL)
         {
-            return false;
+            p101_single_result_ = false;
+            goto p101_single_exit_;
         }
         memcpy(new_msg, src->message, len + 1);
     }
@@ -540,8 +593,12 @@ bool p101_error_copy(struct p101_error *dst, const struct p101_error *src)
         dst->const_message = src->const_message; /* alias, non-owned */
     }
 
-    dst->reporter = dst_reporter;
-    return true;
+    dst->reporter       = dst_reporter;
+    p101_single_result_ = true;
+    goto p101_single_exit_;
+
+p101_single_exit_:
+    return p101_single_result_;
 }
 
 void p101_error_move(struct p101_error *dst, struct p101_error *src)
