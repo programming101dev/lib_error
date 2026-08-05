@@ -116,9 +116,14 @@ static void *raise_errno_repeatedly(void *context)
 
 static void test_concurrent_errno_messages(void)
 {
-    struct errno_thread contexts[] = {{ENOENT, "", 0}, {EACCES, "", 0}, {EINVAL, "", 0}, {ERANGE, "", 0}};
-    int                 created[sizeof(contexts) / sizeof(contexts[0])] = {0};
-    pthread_t           threads[sizeof(contexts) / sizeof(contexts[0])];
+    struct errno_thread contexts[] = {
+        {ENOENT, "", 0},
+        {EACCES, "", 0},
+        {EINVAL, "", 0},
+        {ERANGE, "", 0}
+    };
+    int       created[sizeof(contexts) / sizeof(contexts[0])] = {0};
+    pthread_t threads[sizeof(contexts) / sizeof(contexts[0])];
 
     for(size_t index = 0U; index < sizeof(threads) / sizeof(threads[0]); index++)
     {
