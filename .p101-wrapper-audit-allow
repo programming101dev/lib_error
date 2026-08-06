@@ -1,16 +1,15 @@
 # lib_error is the bottom of the dependency graph. These exact file boundaries
 # implement error creation and reporting without depending on lib_c/lib_posix.
-src/check.c:*:strcmp
-src/error.c:*:fprintf
-src/error.c:*:free
-src/error.c:*:getpid
-src/error.c:*:malloc
-src/error.c:*:memcpy
-src/error.c:*:memset
-src/error.c:*:reporter
-src/error.c:*:strerror_r
-src/error.c:*:strlen
-src/error.c:*:va_copy
-src/error.c:*:va_end
-src/error.c:*:va_start
-src/error.c:*:vsnprintf
+src/check.c		c:@F@strcmp
+src/error.c		c:@F@fprintf
+src/error.c		c:@F@free
+src/error.c		c:@F@getpid
+src/error.c		c:@F@malloc
+src/error.c		c:@F@memcpy
+src/error.c		c:@F@memset
+src/error.c		c:@F@strerror_r
+src/error.c		c:@F@strlen
+src/error.c		c:@F@va_copy
+src/error.c		c:@F@va_end
+src/error.c		c:@F@va_start
+src/error.c		c:@F@vsnprintf

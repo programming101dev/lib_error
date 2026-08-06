@@ -112,6 +112,7 @@ p101_single_exit_:
 
 bool p101_check_equals_string(struct p101_error *err, const char *a, const char *b)
 {
+    int   comparison;
     _Bool p101_single_result_;
     if(a == NULL || b == NULL)
     {
@@ -127,7 +128,8 @@ bool p101_check_equals_string(struct p101_error *err, const char *a, const char 
         goto p101_single_exit_;
     }
 
-    if(strcmp(a, b) != 0)
+    comparison = strcmp(a, b);
+    if(comparison != 0)
     {
         P101_ERROR_RAISE_CHECK(err);
 
@@ -162,6 +164,7 @@ p101_single_exit_:
 
 bool p101_check_not_equals_string(struct p101_error *err, const char *a, const char *b)
 {
+    int   comparison;
     _Bool p101_single_result_;
     if(a == NULL || b == NULL)
     {
@@ -177,7 +180,8 @@ bool p101_check_not_equals_string(struct p101_error *err, const char *a, const c
         goto p101_single_exit_;
     }
 
-    if(strcmp(a, b) == 0)
+    comparison = strcmp(a, b);
+    if(comparison == 0)
     {
         P101_ERROR_RAISE_CHECK(err);
 

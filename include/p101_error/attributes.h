@@ -49,4 +49,15 @@
     #define P101_ATTR_WARN_UNUSED_RESULT
 #endif
 
+/*
+ * Semantic roles are machine-readable API contracts for libclang-based p101
+ * tools. They intentionally disappear for compilers that do not expose Clang
+ * annotate attributes; they do not alter runtime behavior or the ABI.
+ */
+#ifdef __clang__
+    #define P101_ATTR_SEMANTIC_ROLE(role) __attribute__((annotate(role)))
+#else
+    #define P101_ATTR_SEMANTIC_ROLE(role)
+#endif
+
 #endif    // LIBP101_ERROR_ATTRIBUTES_H

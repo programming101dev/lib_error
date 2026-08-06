@@ -31,13 +31,13 @@ enum
 
 struct p101_error
 {
-    const char     *const_message; /* non-owned, static or caller-managed */
-    char           *message;       /* owned heap copy, if present */
-    const char     *file_name;     /* non-owned */
-    const char     *function_name; /* non-owned */
-    int             line_number;
-    p101_error_type type;
-    void (*reporter)(const struct p101_error *err);
+    const char         *const_message; /* non-owned, static or caller-managed */
+    char               *message;       /* owned heap copy, if present */
+    const char         *file_name;     /* non-owned */
+    const char         *function_name; /* non-owned */
+    int                 line_number;
+    p101_error_type     type;
+    p101_error_reporter reporter;
 
     union
     {
@@ -46,18 +46,30 @@ struct p101_error
     };
 };
 
-static void error_init(struct p101_error *err, void (*reporter)(const struct p101_error *err));
+static void error_init(struct p101_error *err, p101_error_reporter reporter);
 static void free_heap_message(struct p101_error *err);
 static void setup_error(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, int line_number, const char *msg);
 static void setup_error_no_dup(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, int line_number, const char *msg);
 static void setup_error_owned(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, int line_number, char *msg);
 
+struct p101_error *p101_error_optional(void)
+{
+    struct p101_error *result;
+
+    result = NULL;
+    return result;
+}
+
 struct p101_error *p101_error_create(bool report)
 {
-    struct p101_error *err = (struct p101_error *)malloc(sizeof *err);
+    void              *allocation;
+    struct p101_error *err;
+
+    allocation = malloc(sizeof *err);
+    err        = (struct p101_error *)allocation;
     if(err != NULL)
     {
-        void (*reporter)(const struct p101_error *err) = NULL;
+        p101_error_reporter reporter = NULL;
 
         if(report)
         {
@@ -77,7 +89,7 @@ void p101_error_destroy(struct p101_error *err)
     }
 }
 
-static void error_init(struct p101_error *err, void (*reporter)(const struct p101_error *err))
+static void error_init(struct p101_error *err, p101_error_reporter reporter)
 {
     memset(err, 0, sizeof *err);
     err->reporter = reporter;
@@ -100,7 +112,7 @@ void p101_error_reset(struct p101_error *err)
 {
     if(err != NULL)
     {
-        void (*reporter)(const struct p101_error *err) = err->reporter;
+        p101_error_reporter reporter = err->reporter;
         free_heap_message(err);
         error_init(err, reporter);
     }
@@ -113,18 +125,16 @@ bool p101_error_is_reporting(const struct p101_error *err)
 
 void p101_error_set_reporting(struct p101_error *err, bool on)
 {
-    if(err == NULL)
+    if(err != NULL)
     {
-        return;
-    }
-
-    if(on)
-    {
-        err->reporter = p101_error_default_error_reporter;
-    }
-    else
-    {
-        err->reporter = NULL;
+        if(on)
+        {
+            err->reporter = p101_error_default_error_reporter;
+        }
+        else
+        {
+            err->reporter = NULL;
+        }
     }
 }
 
@@ -155,36 +165,36 @@ p101_single_exit_:
 
 void p101_error_default_error_reporter(const struct p101_error *err)
 {
-    const char *msg;
-    const char *reported_file;
-    const char *reported_function;
-    long        pid;
-
-    if(err == NULL)
+    if(err != NULL)
     {
-        return;
-    }
+        const char *msg;
+        const char *reported_file;
+        const char *reported_function;
+        pid_t       process_id;
+        long        pid;
 
-    msg = p101_error_get_message(err);
+        msg = p101_error_get_message(err);
 
-    if(msg == NULL)
-    {
-        msg = "<no message>";
-    }
+        if(msg == NULL)
+        {
+            msg = "<no message>";
+        }
 
-    reported_file     = (err->file_name == NULL) ? "?" : err->file_name;
-    reported_function = (err->function_name == NULL) ? "?" : err->function_name;
-    pid               = (long)getpid();
+        reported_file     = (err->file_name == NULL) ? "?" : err->file_name;
+        reported_function = (err->function_name == NULL) ? "?" : err->function_name;
+        process_id        = getpid();
+        pid               = (long)process_id;
 
-    if(err->type == P101_ERROR_ERRNO)
-    {
-        /* NOLINTNEXTLINE(cert-err33-c) */
-        fprintf(stderr, "ERROR (pid=%ld): %s : %s : @ %d : (errno = %d) : %s\n", pid, reported_file, reported_function, err->line_number, err->errno_code, msg);
-    }
-    else
-    {
-        /* NOLINTNEXTLINE(cert-err33-c) */
-        fprintf(stderr, "ERROR (pid=%ld): %s : %s : @ %d : (error code = %d) : %s\n", pid, reported_file, reported_function, err->line_number, err->err_code, msg);
+        if(err->type == P101_ERROR_ERRNO)
+        {
+            /* NOLINTNEXTLINE(cert-err33-c) */
+            fprintf(stderr, "ERROR (pid=%ld): %s : %s : @ %d : (errno = %d) : %s\n", pid, reported_file, reported_function, err->line_number, err->errno_code, msg);
+        }
+        else
+        {
+            /* NOLINTNEXTLINE(cert-err33-c) */
+            fprintf(stderr, "ERROR (pid=%ld): %s : %s : @ %d : (error code = %d) : %s\n", pid, reported_file, reported_function, err->line_number, err->err_code, msg);
+        }
     }
 }
 
@@ -192,28 +202,31 @@ static void setup_error(struct p101_error *err, p101_error_type type, const char
 {
     const char *src = (msg != NULL) ? msg : "<No message>";
     size_t      len;
+    void       *allocation;
     char       *dup;
 
-    len = strlen(src);
-    dup = (char *)malloc(len + 1);
+    len        = strlen(src);
+    allocation = malloc(len + 1);
+    dup        = (char *)allocation;
 
     if(dup == NULL)
     {
         /* Never retain a caller-owned pointer on the allocation-failure path:
          * it may refer to a stack buffer that dies before the error is read. */
         setup_error_no_dup(err, type, file_name, function_name, line_number, "out of memory while recording error");
-        return;
     }
+    else
+    {
+        memcpy(dup, src, len + 1);
+        free_heap_message(err);
 
-    memcpy(dup, src, len + 1);
-    free_heap_message(err);
-
-    err->type          = type;
-    err->file_name     = file_name;
-    err->function_name = function_name;
-    err->line_number   = line_number;
-    err->const_message = NULL;
-    err->message       = dup;
+        err->type          = type;
+        err->file_name     = file_name;
+        err->function_name = function_name;
+        err->line_number   = line_number;
+        err->const_message = NULL;
+        err->message       = dup;
+    }
 }
 
 static void setup_error_no_dup(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, int line_number, const char *msg)
@@ -243,90 +256,82 @@ static void setup_error_owned(struct p101_error *err, p101_error_type type, cons
 
 void p101_error_check(struct p101_error *err, const char *file_name, const char *function_name, int line_number)
 {
-    if(err == NULL)
+    if(err != NULL)
     {
-        return;
-    }
+        setup_error(err, P101_ERROR_CHECK, file_name, function_name, line_number, "failed check");
+        err->errno_code = -1;
 
-    setup_error(err, P101_ERROR_CHECK, file_name, function_name, line_number, "failed check");
-    err->errno_code = -1;
-
-    if(err->reporter)
-    {
-        err->reporter(err);
+        if(err->reporter)
+        {
+            err->reporter(err);
+        }
     }
 }
 
 void p101_error_errno(struct p101_error *err, const char *file_name, const char *function_name, int line_number, errno_t err_code)
 {
-    char message[P101_ERROR_MESSAGE_BUFFER_SIZE];
-    int  result;
-
-    if(err == NULL)
+    if(err != NULL)
     {
-        return;
-    }
+        char message[P101_ERROR_MESSAGE_BUFFER_SIZE];
+        int  result;
 
-    result = strerror_r(err_code, message, sizeof(message));
-    if(result != 0)
-    {
-        const char *static_msg;
-        if(result == EINVAL)
+        result = strerror_r(err_code, message, sizeof(message));
+        if(result != 0)
         {
-            static_msg = "bad errno";
-        }
-        else if(result == ERANGE)
-        {
-            static_msg = "out of memory";
+            const char *static_msg;
+            if(result == EINVAL)
+            {
+                static_msg = "bad errno";
+            }
+            else if(result == ERANGE)
+            {
+                static_msg = "out of memory";
+            }
+            else
+            {
+                static_msg = "unknown error";
+            }
+            setup_error_no_dup(err, P101_ERROR_ERRNO, file_name, function_name, line_number, static_msg);
+            err->errno_code = err_code; /* best effort */
         }
         else
         {
-            static_msg = "unknown error";
+            setup_error(err, P101_ERROR_ERRNO, file_name, function_name, line_number, message);
+            err->errno_code = err_code;
         }
-        setup_error_no_dup(err, P101_ERROR_ERRNO, file_name, function_name, line_number, static_msg);
-        err->errno_code = err_code; /* best effort */
-    }
-    else
-    {
-        setup_error(err, P101_ERROR_ERRNO, file_name, function_name, line_number, message);
-        err->errno_code = err_code;
-    }
 
-    if(err->reporter)
-    {
-        err->reporter(err);
+        if(err->reporter)
+        {
+            err->reporter(err);
+        }
     }
 }
 
 void p101_error_system(struct p101_error *err, const char *file_name, const char *function_name, int line_number, const char *msg, int err_code)
 {
-    if(err == NULL)
+    if(err != NULL)
     {
-        return;
-    }
+        setup_error(err, P101_ERROR_SYSTEM, file_name, function_name, line_number, msg);
+        err->err_code = err_code;
 
-    setup_error(err, P101_ERROR_SYSTEM, file_name, function_name, line_number, msg);
-    err->err_code = err_code;
-
-    if(err->reporter)
-    {
-        err->reporter(err);
+        if(err->reporter)
+        {
+            err->reporter(err);
+        }
     }
 }
 
 void p101_error_user(struct p101_error *err, const char *file_name, const char *function_name, int line_number, const char *msg, int err_code)
 {
-    if(err == NULL)
+    if(err != NULL)
     {
-        return;
-    }
+        setup_error(err, P101_ERROR_USER, file_name, function_name, line_number, msg);
+        err->err_code = err_code;
 
-    setup_error(err, P101_ERROR_USER, file_name, function_name, line_number, msg);
-    err->err_code = err_code;
-
-    if(err->reporter)
-    {
-        err->reporter(err);
+        if(err->reporter)
+        {
+            err->reporter(err);
+        }
     }
 }
 
@@ -340,6 +345,7 @@ void p101_error_user_printf(struct p101_error *err, const char *file_name, const
     va_list args;
     va_list args_copy;
     int     needed;
+    void   *allocation;
     char   *buf;
 
     if(err == NULL)
@@ -366,7 +372,8 @@ void p101_error_user_printf(struct p101_error *err, const char *file_name, const
         goto p101_single_exit_;
     }
 
-    buf = (char *)malloc((size_t)needed + 1);
+    allocation = malloc((size_t)needed + 1);
+    buf        = (char *)allocation;
 
     if(buf == NULL)
     {
@@ -514,12 +521,20 @@ p101_single_exit_:
 /* Older name for p101_error_get_errno(); kept for compatibility. */
 errno_t p101_errno_get_errno(const struct p101_error *err)
 {
-    return p101_error_get_errno(err);
+    errno_t result;
+
+    result = p101_error_get_errno(err);
+    return result;
 }
 
 bool p101_error_is_error(const struct p101_error *err, p101_error_type type, int code)
 {
-    return (err != NULL && type != P101_ERROR_NONE && err->type == type && p101_error_get_code(err) == code) != 0;
+    int  actual_code;
+    bool result;
+
+    actual_code = p101_error_get_code(err);
+    result      = (err != NULL && type != P101_ERROR_NONE && err->type == type && actual_code == code) != 0;
+    return result;
 }
 
 /* Copy and move. Heap messages are copied; immutable emergency fallbacks are
@@ -527,16 +542,18 @@ bool p101_error_is_error(const struct p101_error *err, p101_error_type type, int
 
 bool p101_error_copy(struct p101_error *dst, const struct p101_error *src)
 {
-    bool  p101_single_result_;
-    char *new_msg;
-    void (*dst_reporter)(const struct p101_error *err);
+    bool                p101_single_result_;
+    bool                source_has_error;
+    char               *new_msg;
+    p101_error_reporter dst_reporter;
 
     if(dst == NULL)
     {
         p101_single_result_ = false;
         goto p101_single_exit_;
     }
-    if(src == NULL || !p101_error_has_error(src))
+    source_has_error = p101_error_has_error(src);
+    if(src == NULL || !source_has_error)
     {
         p101_error_reset(dst);
         p101_single_result_ = true;
@@ -554,7 +571,10 @@ bool p101_error_copy(struct p101_error *dst, const struct p101_error *src)
     if(src->message)
     {
         size_t len = strlen(src->message);
-        new_msg    = (char *)malloc(len + 1);
+        void  *allocation;
+
+        allocation = malloc(len + 1);
+        new_msg    = (char *)allocation;
         if(new_msg == NULL)
         {
             p101_single_result_ = false;
@@ -603,41 +623,39 @@ p101_single_exit_:
 
 void p101_error_move(struct p101_error *dst, struct p101_error *src)
 {
-    void (*dst_reporter)(const struct p101_error *err);
+    p101_error_reporter dst_reporter;
 
-    if(dst == NULL || src == NULL || dst == src)
+    if(dst != NULL && src != NULL && dst != src)
     {
-        return;
+        dst_reporter = dst->reporter;
+
+        /* Drop any existing heap message owned by dst. */
+        free_heap_message(dst);
+
+        /* Transfer scalars and pointers. */
+        dst->type          = src->type;
+        dst->file_name     = src->file_name;
+        dst->function_name = src->function_name;
+        dst->line_number   = src->line_number;
+        if(src->type == P101_ERROR_ERRNO)
+        {
+            dst->errno_code = src->errno_code;
+        }
+        else
+        {
+            dst->err_code = src->err_code;
+        }
+        dst->message       = src->message;       /* take ownership */
+        dst->const_message = src->const_message; /* alias */
+        dst->reporter      = dst_reporter;       /* keep dst reporting policy */
+
+        /* Reset source to no error and relinquish ownership. */
+        src->type          = P101_ERROR_NONE;
+        src->file_name     = NULL;
+        src->function_name = NULL;
+        src->line_number   = 0;
+        src->message       = NULL;
+        src->const_message = NULL;
+        /* union value is irrelevant when type == NONE */
     }
-
-    dst_reporter = dst->reporter;
-
-    /* Drop any existing heap message owned by dst. */
-    free_heap_message(dst);
-
-    /* Transfer scalars and pointers. */
-    dst->type          = src->type;
-    dst->file_name     = src->file_name;
-    dst->function_name = src->function_name;
-    dst->line_number   = src->line_number;
-    if(src->type == P101_ERROR_ERRNO)
-    {
-        dst->errno_code = src->errno_code;
-    }
-    else
-    {
-        dst->err_code = src->err_code;
-    }
-    dst->message       = src->message;       /* take ownership */
-    dst->const_message = src->const_message; /* alias */
-    dst->reporter      = dst_reporter;       /* keep dst reporting policy */
-
-    /* Reset source to no error and relinquish ownership. */
-    src->type          = P101_ERROR_NONE;
-    src->file_name     = NULL;
-    src->function_name = NULL;
-    src->line_number   = 0;
-    src->message       = NULL;
-    src->const_message = NULL;
-    /* union value is irrelevant when type == NONE */
 }

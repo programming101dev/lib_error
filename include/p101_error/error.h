@@ -57,9 +57,18 @@ extern "C"
     } p101_error_type;
 
     struct p101_error;
+    typedef void (*p101_error_reporter)(const struct p101_error *err);
 
-    struct p101_error *p101_error_create(bool report) P101_ATTR_MALLOC P101_ATTR_WARN_UNUSED_RESULT;
-    void               p101_error_destroy(struct p101_error *err);
+    /*
+     * Explicitly mark a best-effort call that intentionally has no error
+     * sink. The function carries the semantic role consumed by lib_c_facts;
+     * the macro is only ergonomic syntax and is not used as rule evidence.
+     */
+    struct p101_error *p101_error_optional(void) P101_ATTR_SEMANTIC_ROLE("p101:optional-error");
+#define P101_ERROR_OPTIONAL p101_error_optional()
+
+    struct p101_error *p101_error_create(bool report) P101_ATTR_MALLOC P101_ATTR_WARN_UNUSED_RESULT P101_ATTR_SEMANTIC_ROLE("p101:ownership:error:acquire");
+    void               p101_error_destroy(struct p101_error *err) P101_ATTR_SEMANTIC_ROLE("p101:ownership:error:release");
 
     bool        p101_error_is_reporting(const struct p101_error *err);
     void        p101_error_set_reporting(struct p101_error *err, bool on);
@@ -71,10 +80,10 @@ extern "C"
     void        p101_error_system(struct p101_error *err, const char *file_name, const char *function_name, int line_number, const char *msg, int err_code);
     void        p101_error_user(struct p101_error *err, const char *file_name, const char *function_name, int line_number, const char *msg, int err_code);
     void        p101_error_user_printf(struct p101_error *err, const char *file_name, const char *function_name, int line_number, int err_code, const char *fmt, ...) P101_ATTR_PRINTF(6, 7);
-    bool        p101_error_has_error(const struct p101_error *err);
-    bool        p101_error_has_no_error(const struct p101_error *err);
-    bool        p101_error_is_errno(const struct p101_error *err, errno_t code);
-    bool        p101_error_is_error(const struct p101_error *err, p101_error_type type, int code);
+    bool        p101_error_has_error(const struct p101_error *err) P101_ATTR_SEMANTIC_ROLE("p101:error-state-query:positive");
+    bool        p101_error_has_no_error(const struct p101_error *err) P101_ATTR_SEMANTIC_ROLE("p101:error-state-query:negative");
+    bool        p101_error_is_errno(const struct p101_error *err, errno_t code) P101_ATTR_SEMANTIC_ROLE("p101:error-state-query");
+    bool        p101_error_is_error(const struct p101_error *err, p101_error_type type, int code) P101_ATTR_SEMANTIC_ROLE("p101:error-state-query");
     bool        p101_error_copy(struct p101_error *dst, const struct p101_error *src);
     void        p101_error_move(struct p101_error *dst, struct p101_error *src);
 
