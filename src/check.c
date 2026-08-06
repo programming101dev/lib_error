@@ -235,7 +235,7 @@ p101_single_exit_:
 bool p101_check_greater_than_double(struct p101_error *err, double a, double b)
 {
     _Bool p101_single_result_;
-    if(isnan(a) || isnan(b) || a <= b)
+    if(!isgreater(a, b))
     {
         P101_ERROR_RAISE_CHECK(err);
 
@@ -253,7 +253,7 @@ p101_single_exit_:
 bool p101_check_greater_than_long_double(struct p101_error *err, long double a, long double b)
 {
     _Bool p101_single_result_;
-    if(isnan(a) || isnan(b) || a <= b)
+    if(!isgreater(a, b))
     {
         P101_ERROR_RAISE_CHECK(err);
 
@@ -307,7 +307,7 @@ p101_single_exit_:
 bool p101_check_less_than_double(struct p101_error *err, double a, double b)
 {
     _Bool p101_single_result_;
-    if(isnan(a) || isnan(b) || a >= b)
+    if(!isless(a, b))
     {
         P101_ERROR_RAISE_CHECK(err);
 
@@ -325,7 +325,7 @@ p101_single_exit_:
 bool p101_check_less_than_long_double(struct p101_error *err, long double a, long double b)
 {
     _Bool p101_single_result_;
-    if(isnan(a) || isnan(b) || a >= b)
+    if(!isless(a, b))
     {
         P101_ERROR_RAISE_CHECK(err);
 
@@ -469,7 +469,7 @@ p101_single_exit_:
 bool p101_check_in_range_double(struct p101_error *err, double value, double min_value, double max_value)
 {
     _Bool p101_single_result_;
-    if(isnan(value) || isnan(min_value) || isnan(max_value) || value < min_value || value > max_value)
+    if(!isgreaterequal(value, min_value) || !islessequal(value, max_value))
     {
         P101_ERROR_RAISE_CHECK(err);
 
@@ -487,7 +487,7 @@ p101_single_exit_:
 bool p101_check_in_range_long_double(struct p101_error *err, long double value, long double min_value, long double max_value)
 {
     _Bool p101_single_result_;
-    if(isnan(value) || isnan(min_value) || isnan(max_value) || value < min_value || value > max_value)
+    if(!isgreaterequal(value, min_value) || !islessequal(value, max_value))
     {
         P101_ERROR_RAISE_CHECK(err);
 
