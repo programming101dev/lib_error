@@ -275,7 +275,42 @@ void p101_error_errno(struct p101_error *err, const char *file_name, const char 
         char message[P101_ERROR_MESSAGE_BUFFER_SIZE];
         int  result;
 
+        /*
+         * strerror_r has two incompatible spellings. XSI returns int and
+         * always writes the buffer; the GNU variant returns char * and may
+         * return static storage, leaving the buffer untouched. This library
+         * builds with _XOPEN_SOURCE, but the p101 fact analyzers parse these
+         * sources with _GNU_SOURCE on Linux, so both must compile.
+         */
+#if defined(__GLIBC__) && defined(_GNU_SOURCE)
+        {
+            const char *gnu_message;
+
+            gnu_message = strerror_r(err_code, message, sizeof(message));
+            if(gnu_message == NULL)
+            {
+                result = EINVAL;
+            }
+            else
+            {
+                result = 0;
+                if(gnu_message != message)
+                {
+                    size_t length;
+
+                    length = strlen(gnu_message);
+                    if(length >= sizeof(message))
+                    {
+                        length = sizeof(message) - 1U;
+                    }
+                    memcpy(message, gnu_message, length);
+                    message[length] = '\0';
+                }
+            }
+        }
+#else
         result = strerror_r(err_code, message, sizeof(message));
+#endif
         if(result != 0)
         {
             const char *static_msg;

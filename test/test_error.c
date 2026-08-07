@@ -129,7 +129,17 @@ static void test_concurrent_errno_messages(void)
     {
         int result;
 
+        /*
+         * These tests build with _POSIX_C_SOURCE, so the XSI spelling (int)
+         * is what runs. The GNU spelling (char *) is here only so the p101
+         * fact analyzers, which parse with _GNU_SOURCE on Linux, can compile
+         * this translation unit.
+         */
+#if defined(__GLIBC__) && defined(_GNU_SOURCE)
+        EXPECT(strerror_r(contexts[index].code, contexts[index].expected, sizeof(contexts[index].expected)) != NULL);
+#else
         EXPECT(strerror_r(contexts[index].code, contexts[index].expected, sizeof(contexts[index].expected)) == 0);
+#endif
         result         = pthread_create(&threads[index], NULL, raise_errno_repeatedly, &contexts[index]);
         created[index] = result == 0;
         EXPECT(result == 0);
