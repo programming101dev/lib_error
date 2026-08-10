@@ -52,13 +52,7 @@ static void setup_error(struct p101_error *err, p101_error_type type, const char
 static void setup_error_no_dup(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, int line_number, const char *msg);
 static void setup_error_owned(struct p101_error *err, p101_error_type type, const char *file_name, const char *function_name, int line_number, char *msg);
 
-struct p101_error *p101_error_optional(void)
-{
-    struct p101_error *result;
-
-    result = NULL;
-    return result;
-}
+struct p101_error *const p101_error_optional_sink = NULL;    // NOLINT(cppcoreguidelines-avoid-non-const-global-variables): exported immutable typed null sentinel.
 
 struct p101_error *p101_error_create(bool report)
 {

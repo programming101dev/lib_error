@@ -61,11 +61,11 @@ extern "C"
 
     /*
      * Explicitly mark a best-effort call that intentionally has no error
-     * sink. The function carries the semantic role consumed by lib_c_facts;
-     * the macro is only ergonomic syntax and is not used as rule evidence.
+     * sink. This is a typed constant, rather than a hidden function call, so
+     * using it as an argument preserves the one-call-per-expression contract.
      */
-    struct p101_error *p101_error_optional(void) P101_ATTR_SEMANTIC_ROLE("p101:optional-error");
-#define P101_ERROR_OPTIONAL p101_error_optional()
+    extern struct p101_error *const p101_error_optional_sink P101_ATTR_SEMANTIC_ROLE("p101:optional-error");    // NOLINT(cppcoreguidelines-avoid-non-const-global-variables): the pointer value is immutable; the wrapper API requires a non-const pointee type.
+#define P101_ERROR_OPTIONAL p101_error_optional_sink
 
     struct p101_error *p101_error_create(bool report) P101_ATTR_MALLOC P101_ATTR_WARN_UNUSED_RESULT P101_ATTR_SEMANTIC_ROLE("p101:ownership:error:acquire");
     void               p101_error_destroy(struct p101_error *err) P101_ATTR_SEMANTIC_ROLE("p101:ownership:error:release");
